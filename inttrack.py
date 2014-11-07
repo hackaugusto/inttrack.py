@@ -38,10 +38,10 @@ op_format = {
 }
 
 
-def track(number):
+def track(number, operations=None):
     if isinstance(number, Decimal):
-        return DecimalTrack(number)
-    return IntTrack(number)
+        return DecimalTrack(number, operations)
+    return IntTrack(number, operations)
 
 
 def partial(function, *args, **kwargs):
@@ -63,7 +63,7 @@ def unary_op(type_, operator, operation, lhs):
         lhs_operations = lhs
 
     result = operator(type_(lhs))
-    return IntTrack(result, operation(lhs_operations))
+    return track(result, operation(lhs_operations))
 
 
 def binary_op(type_, operator, operation, lhs, rhs):
@@ -78,7 +78,7 @@ def binary_op(type_, operator, operation, lhs, rhs):
         rhs_operations = rhs
 
     result = operator(type_(lhs), type_(rhs))
-    return IntTrack(result, operation(lhs_operations, rhs_operations))
+    return track(result, operation(lhs_operations, rhs_operations))
 
 
 def binary_rop(type_, operator, operation, rhs, lhs):
@@ -192,6 +192,15 @@ class TrackTestCase(unittest.TestCase):
     def test_order(self):
         self.assertEquals((4 * track(5)).operations, mul(4, 5))
         self.assertEquals((track(7) / 3).operations, div(7, 3))
+
+    def test_expression(self):
+        def format_value(value):
+            if isinstance(value, Decimal):
+                return value.quantize(Decimal('0.0000'))
+            return value
+
+        value = 4 * track(Decimal(5.6666))
+        self.assertEquals(expression(value.operations, format_value), '(4 * 5.6666)')
 
 if __name__ == '__main__':
     import argparse
