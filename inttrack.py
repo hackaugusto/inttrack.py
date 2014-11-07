@@ -85,11 +85,14 @@ def binary_rop(type_, operator, operation, rhs, lhs):
     return binary_op(type_, operator, operation, lhs, rhs)
 
 
-def expression(operations):
+def expression(operations, callback=None):
+    '''Create a readable string from operations, use callback to change the numeric values'''
     if not isinstance(operations, tuple):
+        if callback:
+            return str(callback(operations))
         return str(operations)
 
-    subexpressions = map(expression, operations)
+    subexpressions = (expression(op, callback) for op in operations)
     return '({})'.format(op_format[operations.__class__.__name__].format(*subexpressions))
 
 
